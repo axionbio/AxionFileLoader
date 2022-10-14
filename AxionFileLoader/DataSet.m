@@ -101,14 +101,14 @@ classdef DataSet < handle & matlab.mixin.Heterogeneous & matlab.mixin.CustomDisp
         function this = Construct(varargin)
             this = DataSet(varargin{:});
             fUpgrade = false;
-            fContinuousBlockVectorHeader = [];
+            fCombinedBlockVector = [];
             switch nargin
                 case 0
                     fUpgrade = false;
                 case 1
                     if (isa(varargin{1}, 'BlockVectorSet'))
                         fUpgrade = true;
-                        fContinuousBlockVectorHeader = varargin{1}.CombinedBlockVector;
+                        fCombinedBlockVector = varargin{1}.CombinedBlockVector;
                     end
                 otherwise
                     error('Unexpected Argument')
@@ -118,9 +118,9 @@ classdef DataSet < handle & matlab.mixin.Heterogeneous & matlab.mixin.CustomDisp
                     case BlockVectorDataType.Raw_v1
                         this = ContinuousDataSet(this);
                     case BlockVectorDataType.Spike_v1
-                        this = SpikeDataSet(this);
+                        this = SpikeDataSet(this, fCombinedBlockVector);
                     case BlockVectorDataType.NamedContinuousData
-                        this = ContinuousDataSet(this, fContinuousBlockVectorHeader);
+                        this = ContinuousDataSet(this, fCombinedBlockVector);
                 end
             end
         end
@@ -358,7 +358,8 @@ classdef DataSet < handle & matlab.mixin.Heterogeneous & matlab.mixin.CustomDisp
                 % are from the channel array
                 switch aChannelArray.PlateType
                     case {PlateTypes.NinetySixWell, PlateTypes.NinetySixWellCircuit, ...
-                          PlateTypes.NinetySixWellTransparent, PlateTypes.NinetySixWellLumos}
+                          PlateTypes.NinetySixWellTransparent, PlateTypes.NinetySixWellLumos,  ...
+                          PlateTypes.Reserved02}
                         fTargetElectrodes = DataSet.all_8electrodes();
                     otherwise
                         fTargetElectrodes = DataSet.all_wells_electrodes(...
@@ -475,6 +476,7 @@ classdef DataSet < handle & matlab.mixin.Heterogeneous & matlab.mixin.CustomDisp
                         'DataSetNames',obj.DataSetNames,...
                         'Description',obj.Description,...
                         'SamplingFrequency', obj.SamplingFrequency,...
+                        'Duration', obj.Duration,...
                         'VoltageScale', obj.VoltageScale,...
                         'BlockVectorStartTime', obj.BlockVectorStartTime.ToDateTimeString(), ...
                         'ExperimentStartTime',obj.ExperimentStartTime.ToDateTimeString(),...
@@ -522,15 +524,36 @@ classdef DataSet < handle & matlab.mixin.Heterogeneous & matlab.mixin.CustomDisp
                 case BlockVectorDataType.NamedContinuousData
                     if( strcmp(this.Name, 'Voltage') && ...
                          (iscell(this.DataSetNames)) && ...
-                         (length(this.DataSetNames) == 1) && ...
-                         strcmp(this.DataSetNames{1}, 'Raw') )
-                        outVal = true;
+                         (length(this.DataSetNames) == 1))
+                        outVal =...
+                            strcmp(this.DataSetNames{1}, 'Raw') || ...
+                            strcmp(this.DataSetNames{1}, 'Broadband High-Frequency') || ...
+                            strcmp(this.DataSetNames{1}, 'Broadband Low-Frequency') ;
                         return;
                     end
             end
             outVal = false;
         end
+        
+        function outVal = IsBbpHigh(this)
+            outVal = (this.DataType == BlockVectorDataType.NamedContinuousData &&...
+                 strcmp(this.Name, 'Voltage') && ...
+                 (iscell(this.DataSetNames)) && ...
+                 (length(this.DataSetNames) == 1) && ...
+                 strcmp(this.DataSetNames{1}, 'Broadband High-Frequency'));
+            return;
+        end
+        
+        function outVal = IsBbpLow(this)
+            outVal = (this.DataType == BlockVectorDataType.NamedContinuousData &&...
+                 strcmp(this.Name, 'Voltage') && ...
+                 (iscell(this.DataSetNames)) && ...
+                 (length(this.DataSetNames) == 1) && ...
+                 strcmp(this.DataSetNames{1}, 'Broadband Low-Frequency'));
+            return;
+        end
 
+        
         function outVal = IsRawContractility(this)
             switch this.DataType
                 case BlockVectorDataType.NamedContinuousData
@@ -548,10 +571,26 @@ classdef DataSet < handle & matlab.mixin.Heterogeneous & matlab.mixin.CustomDisp
         function outVal = IsSpikes(this)
             switch this.DataType
                 case BlockVectorDataType.Spike_v1
-                    outVal = true;
+                    outVal = isempty(this.DataSetNames) || ...
+                        ((iscell(this.DataSetNames)) && ...
+                         (length(this.DataSetNames) == 1) && ... 
+                         strcmp(this.DataSetNames, 'Spikes'));
                     return;
             end
             outVal = false;
+        end
+        
+        function outVal = IsLfp(this)
+            
+            switch this.DataType
+                case BlockVectorDataType.Spike_v1
+                    outVal = ~isempty(this.DataSetNames) && strcmp(this.DataSetNames, 'LFP Events');
+                    return;
+            end
+             outVal = this.DataType == BlockVectorDataType.Spike_v1 && ...
+                iscell(this.DataSetNames) && ...
+                length(this.DataSetNames) == 1 && ... 
+                strcmp(this.DataSetNames, 'Spikes');
         end
     end
 end

@@ -37,6 +37,8 @@ classdef CombinedBlockVectorHeaderEntry < Entry
     %   ModifiedDate: The Date/Time that this data was last
     %   modified(Created, Not updated if copied from another file!)
     %
+    %   Duration: Number of seconds this entry reprsents
+    %
     %   DataRegion: Area where the block vector is located. Commented for
     %   now.
     %
@@ -78,6 +80,7 @@ classdef CombinedBlockVectorHeaderEntry < Entry
         ExperimentStartTime
         AddedDate
         ModifiedDate
+        Duration
         SampleType
         VectorHeaderSize
         BlockHeaderSize
@@ -108,6 +111,7 @@ classdef CombinedBlockVectorHeaderEntry < Entry
                 aExperimentStartTime, ...
                 aAddedDate, ...
                 aModifiedDate, ...
+                aDuration, ...
                 aName, ...
                 aDescription, ...
                 aDataRegionStart, ...
@@ -143,6 +147,7 @@ classdef CombinedBlockVectorHeaderEntry < Entry
             this.ExperimentStartTime = aExperimentStartTime;
             this.AddedDate = aAddedDate;
             this.ModifiedDate = aModifiedDate;
+            this.Duration = aDuration;
             
             this.Name = aName;
             
@@ -190,6 +195,13 @@ classdef CombinedBlockVectorHeaderEntry < Entry
             fAddedDate = DateTime(aFileID);
             fModifiedDate = DateTime(aFileID);
             
+            % New Duration 
+            if (fVersionMajor > 1 || fVersionMinor >= 1)
+                fDuration = fread(aFileID, 1, 'double=>double');
+            else
+                fDuration = [];
+            end
+            
             fNameStringSizeInBytes = fread(aFileID, 1, 'int=>int');
             fName = fread(aFileID, fNameStringSizeInBytes, '*char').';
             
@@ -206,6 +218,7 @@ classdef CombinedBlockVectorHeaderEntry < Entry
             % Calculate and check CRC
             fseek(aFileID, fBlockVectorMetadataStartPos, 'bof');
             fCRCBytes = fread(aFileID, fDataSize, 'uint8');
+            
             fCalcCRC = CRC32(AxisFile.CRC_POLYNOMIAL, AxisFile.CRC_SEED).Compute(fCRCBytes);
             fReadCRC = fread(aFileID, 1, 'uint32');
             
@@ -214,6 +227,10 @@ classdef CombinedBlockVectorHeaderEntry < Entry
             end
             
             fSize = CombinedBlockVectorHeaderEntry.BASE_SIZE_IN_BYTES + fNameStringSizeInBytes + fDescriptionStringSizeInBytes + 8;
+            
+            if (fVersionMajor > 1 || fVersionMinor >= 1)
+                fSize = fSize + 8; % addDuration Feild
+            end
             
             % actual read size
             fBlockVectorMetadataReadSize = ftell(aFileID) - fBlockVectorMetadataStartPos;
@@ -240,6 +257,7 @@ classdef CombinedBlockVectorHeaderEntry < Entry
                 fExperimentStartTime, ...
                 fAddedDate, ...
                 fModifiedDate, ...
+                fDuration, ...
                 fName, ...
                 fDescription, ...
                 fDataRegionStart, ...

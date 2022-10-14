@@ -6,6 +6,8 @@
 classdef SpikeDataSet < DataSet
 
     properties (GetAccess = public, SetAccess = private)
+        Duration;
+        ChannelIDs;
         DataSetNames;
     end
 
@@ -17,11 +19,22 @@ classdef SpikeDataSet < DataSet
         function this = SpikeDataSet(varargin)
             this@DataSet(varargin{1});
             this.mLoadData = @this.LoadSpikeData;
-
+            
             fileName = this.SourceFile.FileName;
             numSpikes = this.NumBlocks;
             numSamples = double(this.NumDataSetsPerBlock * this.NumChannelsPerBlock * this.NumSamplesPerBlock);
             reservedSpace = double(this.BlockHeaderSize - Spike_v1.LOADED_HEADER_SIZE);
+            
+            if length(varargin) > 1 && isa(varargin{2}, 'DiscontinuousBlockVectorHeaderEntry')
+                fEntry = varargin{2};
+                this.ChannelIDs = fEntry.ChannelIDs;
+                this.DataSetNames = {fEntry.DataSetName};
+                this.Duration = fEntry.Duration;
+            else
+                this.ChannelIDs = [ ];
+                this.DataSetNames = [ ];
+                this.Duration = [ ];
+            end 
 
             if (this.NumDataSetsPerBlock == 1 && ...
                 this.NumChannelsPerBlock == 1 && ...

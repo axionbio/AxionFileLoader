@@ -7,6 +7,7 @@ classdef ContinuousDataSet < DataSet
 
     properties (GetAccess = public, SetAccess = private)
         DataSetNames;
+        Duration;
     end
 
     methods
@@ -21,8 +22,11 @@ classdef ContinuousDataSet < DataSet
                     obj.DataSetNames = aContinuousHeader.DataSetNames;
                     obj.ChannelArray = fChannelArray.GetNewForChannels( ...
                         fChannelArray.Channels(arrayfun(@(a)(fChannelArray.LookupChannelID(a)),[aContinuousHeader.ChannelIDs{:}])));
+                    obj.Duration = aContinuousHeader.Duration;
                 else
                     obj.DataSetNames = [];
+                    obj.Duration = double(this.DataRegionLength) / ...
+                        double(this.SamplingFrequency * this.NumBytesPerBlock);
                 end
             end
         end
@@ -47,26 +51,7 @@ classdef ContinuousDataSet < DataSet
                 fDimensions, ...
                 fSubsamplingFactor);
         end
-
-        function duration = Duration(this)
-            %Length: The length of this data set in seconds
-            duration = double(this.DataRegionLength) / ...
-                double(this.SamplingFrequency * this.NumBytesPerBlock);
-        end
    end
-
-    methods (Access = protected)
-        function propgrp = getPropertyGroups(obj)
-            if ~isscalar(obj)
-                propgrp = getPropertyGroups@DataSet(obj);
-            else
-                propgrp = getPropertyGroups@DataSet(obj);
-                propList = propgrp.PropertyList;
-                propList.Duration = obj.Duration;
-                propgrp = matlab.mixin.util.PropertyGroup(propList);
-            end
-        end
-    end
 
    methods(Access = private)
         function Waveforms = GetContinuousWaveforms(...
