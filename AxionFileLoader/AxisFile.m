@@ -97,7 +97,7 @@ classdef AxisFile < handle & matlab.mixin.CustomDisplay
     end
 
     properties (Constant = true, GetAccess = public)
-        VERSION='1.0.0.0';
+        VERSION='1.1.0.0';
     end
 
     properties (SetAccess = private, GetAccess = public)
