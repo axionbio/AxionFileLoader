@@ -1,5 +1,5 @@
 %{
-    Copyright (c) 2021 Axion BioSystems, Inc.
+    Copyright (c) 2022 Axion BioSystems, Inc.
     Contact: support@axion-biosystems.com
     All Rights Reserved
 %}
@@ -97,7 +97,7 @@ classdef AxisFile < handle & matlab.mixin.CustomDisplay
     end
 
     properties (Constant = true, GetAccess = public)
-        VERSION='1.0.0.0';
+        VERSION='1.1.0.0';
     end
 
     properties (SetAccess = private, GetAccess = public)
@@ -334,6 +334,8 @@ classdef AxisFile < handle & matlab.mixin.CustomDisplay
                             switch(fCombinedBlockVector.DataType)
                                 case BlockVectorDataType.NamedContinuousData
                                     fCurrentCombinedBlockVector = ContinuousBlockVectorHeaderEntry.DeserializeFromCombinedBlockVectorHeaderEntry(entryRecord, fCombinedBlockVector, this.FileID);
+                                case BlockVectorDataType.Spike_v1
+                                    fCurrentCombinedBlockVector = DiscontinuousBlockVectorHeaderEntry.DeserializeFromCombinedBlockVectorHeaderEntry(entryRecord, fCombinedBlockVector, this.FileID);
                                 otherwise
                                     warning('Unsupported BlockVectorDataType: %d. Skipping record...', fCombinedBlockVector.DataType);
                             end
@@ -527,11 +529,20 @@ classdef AxisFile < handle & matlab.mixin.CustomDisplay
                 if(~isempty(obj.RawVoltageData))
                     propList.RawVoltageData = obj.RawVoltageData;
                 end
+                if(~isempty(obj.BroadbandHighFrequency))
+                    propList.BroadbandHighFrequency = obj.BroadbandHighFrequency;
+                end
+                if(~isempty(obj.BroadbandLowFrequency))
+                    propList.BroadbandLowFrequency = obj.BroadbandLowFrequency;
+                end
                 if(~isempty(obj.RawContractilityData))
                     propList.RawContractilityData = obj.RawContractilityData;
                 end
                 if(~isempty(obj.SpikeData))
                     propList.SpikeData = obj.SpikeData;
+                end
+                if(~isempty(obj.LfpData))
+                    propList.LfpData = obj.LfpData;
                 end
                 propgrp = matlab.mixin.util.PropertyGroup(propList);
             end
@@ -545,6 +556,18 @@ classdef AxisFile < handle & matlab.mixin.CustomDisplay
             fSearch = [fSearch{:}];
             dataSet = this.DataSets(fSearch);
         end
+        
+        function dataSet = BroadbandHighFrequency(this)
+            fSearch = arrayfun(@(a)(a.IsBbpHigh()), this.DataSets, 'UniformOutput', false);
+            fSearch = [fSearch{:}];
+            dataSet = this.DataSets(fSearch);
+        end
+
+        function dataSet = BroadbandLowFrequency(this)
+            fSearch = arrayfun(@(a)(a.IsBbpLow()), this.DataSets, 'UniformOutput', false);
+            fSearch = [fSearch{:}];
+            dataSet = this.DataSets(fSearch);
+        end
 
         function dataSet = RawContractilityData(this)
             fSearch = arrayfun(@(a)(a.IsRawContractility()), this.DataSets, 'UniformOutput', false);
@@ -554,6 +577,12 @@ classdef AxisFile < handle & matlab.mixin.CustomDisplay
 
         function dataSet = SpikeData(this)
             fSearch = arrayfun(@(a)(a.IsSpikes()), this.DataSets, 'UniformOutput', false);
+            fSearch = [fSearch{:}];
+            dataSet = this.DataSets(fSearch);
+        end
+        
+        function dataSet = LfpData(this)
+            fSearch = arrayfun(@(a)(a.IsLfp()), this.DataSets, 'UniformOutput', false);
             fSearch = [fSearch{:}];
             dataSet = this.DataSets(fSearch);
         end

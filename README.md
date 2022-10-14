@@ -58,9 +58,21 @@ For more details, please refer to the Wiki.
 
 ## Current Version
 
-This initial release (1.0.0.0) is the first Open Source release of this code. It
-supports the Axis Suite verison 3.5.
+This release (1.1.0.0) was released alongside AxIS 3.7.1 and is the
+most current version.
 
 ## Changelog
 
-1.0.0.0 - Initial public release!
+### [1.1.0.0] - 2022-10-14
+
+Released alongside AxIS 3.7.1
+
+#### Added
+
+- Added support for files recorded in the new Neural Broadband mode
+- Added Duration field to the headers to indicate duration (in seconds)
+ of the data set.
+
+### [1.0.0.0]
+
+- Initial public release!
