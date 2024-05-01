@@ -1,12 +1,12 @@
 %{
-    Copyright (c) 2022 Axion BioSystems, Inc.
+    Copyright (c) 2024 Axion BioSystems, Inc.
     Contact: support@axion-biosystems.com
     All Rights Reserved
 %}
 classdef StimulationEvent < EventTag
     %STIMULATIONEVENT Event data that corresponds to a tagged stimulation
     %that occurred in the file
-    properties (GetAccess = private, Constant = true)
+    properties (GetAccess = public, Constant = true)
         CurrentVersion = 0;
     end
 

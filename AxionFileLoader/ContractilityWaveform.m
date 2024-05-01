@@ -1,5 +1,5 @@
 %{
-    Copyright (c) 2022 Axion BioSystems, Inc.
+    Copyright (c) 2024 Axion BioSystems, Inc.
     Contact: support@axion-biosystems.com
     All Rights Reserved
 %}
@@ -24,14 +24,14 @@ classdef ContractilityWaveform < Waveform
             contractilityData = fData * diag(fVoltageScale);
             
             %Subtract the first order polyfit to remove the baseline
-            for fI = 1:size(contractilityData, 2);
-                baseline = polyfit(timeData(:,fI),contractilityData(:,fI),1);
-                contractilityData(:,fI) = contractilityData(:,fI) - polyval(baseline, timeData(:,fI));
+            for fI = 1:size(contractilityData, 2)
+                poly = polyfit(timeData(:,fI),contractilityData(:,fI),1);
+                
+                fBaseline = polyval(poly, timeData(:,fI));
+                
+                %Scale as a percent of baseline 
+                contractilityData(:,fI) = (contractilityData(:,fI) - fBaseline) * 100 ./ fBaseline;
             end
-            
-            %Scale by the Mean of the data 
-            means = mean(contractilityData);
-            contractilityData = contractilityData * diag( 100 ./ means );
         end
 
         function contractilityData = GetContractilityVector(this)

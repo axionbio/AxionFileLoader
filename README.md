@@ -58,10 +58,19 @@ For more details, please refer to the Wiki.
 
 ## Current Version
 
-This release (1.1.0.0) was released alongside AxIS 3.7.1 and is the
+This release (1.2.0.0) was released alongside AxIS 3.12 and is the
 most current version.
 
 ## Changelog
+
+### [1.2.0.0] - 2024-5-1
+
+Released alongside AxIS 3.12
+
+#### Added
+
+- Bug fixes
+- Added support for new plate types
 
 ### [1.1.0.0] - 2022-10-14
 

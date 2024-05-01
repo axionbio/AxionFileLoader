@@ -1,5 +1,5 @@
 %{
-    Copyright (c) 2022 Axion BioSystems, Inc.
+    Copyright (c) 2024 Axion BioSystems, Inc.
     Contact: support@axion-biosystems.com
     All Rights Reserved
 %}
@@ -15,20 +15,30 @@ classdef ContinuousDataSet < DataSet
             obj@DataSet(varargin{1});
             obj.mLoadData = @obj.LoadRawData;
             switch nargin
+                case 1
+                    %drop to end
                 case 2
-                if(isa(varargin{2}, 'ContinuousBlockVectorHeaderEntry'))
-                    aContinuousHeader = varargin{2};
-                    fChannelArray = obj.ChannelArray;
-                    obj.DataSetNames = aContinuousHeader.DataSetNames;
-                    obj.ChannelArray = fChannelArray.GetNewForChannels( ...
-                        fChannelArray.Channels(arrayfun(@(a)(fChannelArray.LookupChannelID(a)),[aContinuousHeader.ChannelIDs{:}])));
-                    obj.Duration = aContinuousHeader.Duration;
-                else
-                    obj.DataSetNames = [];
-                    obj.Duration = double(this.DataRegionLength) / ...
-                        double(this.SamplingFrequency * this.NumBytesPerBlock);
-                end
+                    if(isa(varargin{2}, 'ContinuousBlockVectorHeaderEntry'))
+                        aContinuousHeader = varargin{2};
+                        fChannelArray = obj.ChannelArray;
+                        obj.DataSetNames = aContinuousHeader.DataSetNames;
+                        obj.ChannelArray = fChannelArray.GetNewForChannels( ...
+                            fChannelArray.Channels(arrayfun(@(a)(fChannelArray.LookupChannelID(a)),[aContinuousHeader.ChannelIDs{:}])));
+                        sourceDuration = aContinuousHeader.Duration;
+                        if isempty(sourceDuration)
+                            obj.Duration = double(obj.DataRegionLength) / ...
+                                double(obj.SamplingFrequency * obj.NumBytesPerBlock);
+                        else
+                            obj.Duration = aContinuousHeader.Duration;
+                        end
+                        return;
+                    end
+                otherwise
+                    error('Unexpected aarguments')
             end
+            obj.DataSetNames = [];
+            obj.Duration = double(obj.DataRegionLength) / ...
+                double(obj.SamplingFrequency * obj.NumBytesPerBlock);
         end
 
         function aData = LoadRawData(this, varargin)
@@ -217,6 +227,41 @@ classdef ContinuousDataSet < DataSet
 
                     end
                 end
+            end
+        end
+   end
+   methods (Access = protected)
+        function propgrp = getPropertyGroups(obj)
+            if ~isscalar(obj)
+                propgrp = getPropertyGroups@matlab.mixin.CustomDisplay(obj);
+            else
+                if(~isempty(obj.DataSetNames) && iscell(obj.DataSetNames))
+                    propList = struct(...
+                        'Name',obj.Name,...
+                        'DataSetNames',obj.DataSetNames,...
+                        'Description',obj.Description,...
+                        'SamplingFrequency', obj.SamplingFrequency,...
+                        'Duration', obj.Duration,...
+                        'VoltageScale', obj.VoltageScale,...
+                        'BlockVectorStartTime', obj.BlockVectorStartTime.ToDateTimeString(), ...
+                        'ExperimentStartTime',obj.ExperimentStartTime.ToDateTimeString(),...
+                        'AddedDate', obj.AddedDate.ToDateTimeString(),...
+                        'ModifiedDate', obj.ModifiedDate.ToDateTimeString());
+                elseif(~(isempty(obj.AddedDate) ||  isempty(obj.ModifiedDate)))
+                    propList = struct(...
+                        'Description',obj.Description,...
+                        'SamplingFrequency', obj.SamplingFrequency,...
+                        'VoltageScale', obj.VoltageScale,...
+                        'BlockVectorStartTime', obj.BlockVectorStartTime.ToDateTimeString(), ...
+                        'ExperimentStartTime',obj.ExperimentStartTime.ToDateTimeString(),...
+                        'Duration', obj.Duration,...
+                        'AddedDate', obj.AddedDate.ToDateTimeString(),...
+                        'ModifiedDate', obj.ModifiedDate.ToDateTimeString());
+                else
+                    propgrp = DataSet(obj).getPropertyGroups();
+                    return;
+                end
+                propgrp = matlab.mixin.util.PropertyGroup(propList);
             end
         end
     end

@@ -1,5 +1,5 @@
 %{
-    Copyright (c) 2022 Axion BioSystems, Inc.
+    Copyright (c) 2024 Axion BioSystems, Inc.
     Contact: support@axion-biosystems.com
     All Rights Reserved
 %}
@@ -97,7 +97,8 @@ classdef AxisFile < handle & matlab.mixin.CustomDisplay
     end
 
     properties (Constant = true, GetAccess = public)
-        VERSION='1.1.0.0';
+        % Version of AxIS this script is released with
+        AXIS_VERSION='6.0.0.6';
     end
 
     properties (SetAccess = private, GetAccess = public)
