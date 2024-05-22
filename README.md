@@ -63,7 +63,7 @@ most current version.
 
 ## Changelog
 
-### [1.2.0.0] - 2024-5-1
+### [1.2.0.0] - 2024-5-22
 
 Released alongside AxIS 3.12
 
